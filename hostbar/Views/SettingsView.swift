@@ -3,8 +3,9 @@ import ServiceManagement
 
 struct SettingsView: View {
     @State private var launchAtLogin = false
-    @State private var updateMessage: String? = nil
     @State private var isCheckingUpdate = false
+    @State private var updateMessage: String? = nil
+    @State private var updateFailed = false
 
     private var appVersion: String {
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—"
@@ -13,17 +14,57 @@ struct SettingsView: View {
     }
 
     var body: some View {
+        VStack(spacing: 0) {
+            appHeader
+            Divider()
+            settingsForm
+        }
+        .frame(width: 400)
+        .onAppear {
+            launchAtLogin = getLaunchAtLoginState()
+        }
+    }
+
+    // MARK: - Subviews
+
+    private var appHeader: some View {
+        HStack(spacing: 14) {
+            if let icon = NSImage(named: "AppIcon") {
+                Image(nsImage: icon)
+                    .resizable()
+                    .interpolation(.high)
+                    .antialiased(true)
+                    .frame(width: 60, height: 60)
+            }
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text("HostBar")
+                    .font(.title3)
+                    .fontWeight(.semibold)
+                Text("Version \(appVersion)")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer()
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 20)
+        .padding(.bottom, 16)
+    }
+
+    private var settingsForm: some View {
         Form {
-            Section {
-                Toggle("로그인 시 자동 실행", isOn: $launchAtLogin)
+            Section("General") {
+                Toggle("Launch at Login", isOn: $launchAtLogin)
                     .onChange(of: launchAtLogin) { _, newValue in
                         setLaunchAtLogin(enabled: newValue)
                     }
             }
 
-            Section {
-                HStack {
-                    Button("업데이트 확인") {
+            Section("Updates") {
+                HStack(spacing: 10) {
+                    Button("Check for Updates") {
                         checkForUpdates()
                     }
                     .disabled(isCheckingUpdate)
@@ -31,28 +72,25 @@ struct SettingsView: View {
                     if isCheckingUpdate {
                         ProgressView()
                             .scaleEffect(0.7)
-                            .padding(.leading, 4)
+                            .frame(width: 14, height: 14)
+                        Text("Checking…")
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+                    } else if let message = updateMessage {
+                        Text(message)
+                            .font(.callout)
+                            .foregroundStyle(updateFailed ? .red : .secondary)
                     }
-                }
 
-                if let message = updateMessage {
-                    Text(message)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    Spacer()
                 }
-            }
-
-            Section {
-                LabeledContent("앱 버전", value: appVersion)
-                    .foregroundStyle(.secondary)
             }
         }
         .formStyle(.grouped)
-        .frame(width: 360)
-        .onAppear {
-            launchAtLogin = getLaunchAtLoginState()
-        }
+        .scrollDisabled(true)
     }
+
+    // MARK: - Logic
 
     private func getLaunchAtLoginState() -> Bool {
         if #available(macOS 13.0, *) {
@@ -70,7 +108,6 @@ struct SettingsView: View {
                     try SMAppService.mainApp.unregister()
                 }
             } catch {
-                // 실패 시 토글 복원
                 launchAtLogin = getLaunchAtLoginState()
             }
         }
@@ -79,11 +116,12 @@ struct SettingsView: View {
     private func checkForUpdates() {
         isCheckingUpdate = true
         updateMessage = nil
+        updateFailed = false
 
-        // 실제 업데이트 확인 로직 자리 (예: Sparkle 또는 GitHub Releases API)
+        // TODO: Integrate with Sparkle or GitHub Releases API
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
             isCheckingUpdate = false
-            updateMessage = "최신 버전을 사용 중입니다."
+            updateMessage = "You're up to date."
         }
     }
 }

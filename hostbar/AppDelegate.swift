@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import ServiceManagement
 
 class AppDelegate: NSObject, NSApplicationDelegate {
     var statusItem: NSStatusItem!
@@ -10,6 +11,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         setupStatusItem()
         setupPopover()
+        enableLaunchAtLoginIfFirstRun()
+    }
+
+    private func enableLaunchAtLoginIfFirstRun() {
+        let key = "hasConfiguredLaunchAtLogin"
+        guard !UserDefaults.standard.bool(forKey: key) else { return }
+        UserDefaults.standard.set(true, forKey: key)
+        if #available(macOS 13.0, *) {
+            try? SMAppService.mainApp.register()
+        }
     }
 
     private func setupStatusItem() {
@@ -74,7 +85,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             window.title = "Settings"
             window.styleMask = NSWindow.StyleMask([.titled, .closable])
             window.isReleasedWhenClosed = false
-            window.setContentSize(NSSize(width: 360, height: 200))
+            window.setContentSize(NSSize(width: 400, height: 300))
             window.center()
             settingsWindow = window
         }
