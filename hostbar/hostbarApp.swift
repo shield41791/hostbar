@@ -1,17 +1,13 @@
-//
-//  hostbarApp.swift
-//  hostbar
-//
-//  Created by Yohan Joo on 2026/04/17.
-//
-
 import SwiftUI
 
 @main
-struct hostbarApp: App {
+struct HostBarApp: App {
+    @State private var viewModel = HostsViewModel()
+
     var body: some Scene {
-        WindowGroup {
-            ContentView()
+        MenuBarExtra("HostBar", systemImage: "server.rack") {
+            MenuBarView(viewModel: viewModel)
         }
+        .menuBarExtraStyle(.window)
     }
 }
