@@ -2,12 +2,11 @@ import SwiftUI
 
 @main
 struct HostBarApp: App {
-    @State private var viewModel = HostsViewModel()
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     var body: some Scene {
-        MenuBarExtra("HostBar", systemImage: "server.rack") {
-            MenuBarView(viewModel: viewModel)
+        Settings {
+            EmptyView()
         }
-        .menuBarExtraStyle(.window)
     }
 }
