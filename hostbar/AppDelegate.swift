@@ -86,7 +86,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             window.title = "Settings"
             window.styleMask = NSWindow.StyleMask([.titled, .closable])
             window.isReleasedWhenClosed = false
-            window.setContentSize(NSSize(width: 400, height: 300))
+            window.setContentSize(NSSize(width: 400, height: 380))
             window.center()
             settingsWindow = window
         }

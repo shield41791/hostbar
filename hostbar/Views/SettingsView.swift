@@ -18,6 +18,7 @@ struct SettingsView: View {
             appHeader
             Divider()
             settingsForm
+            copyrightFooter
         }
         .frame(width: 400)
         .onAppear {
@@ -51,6 +52,14 @@ struct SettingsView: View {
         .padding(.horizontal, 20)
         .padding(.top, 20)
         .padding(.bottom, 16)
+    }
+
+    private var copyrightFooter: some View {
+        Text("© 2026 Yohan Joo. All rights reserved.")
+            .font(.caption)
+            .foregroundStyle(.tertiary)
+            .padding(.bottom, 14)
+            .padding(.top, 4)
     }
 
     private var settingsForm: some View {
