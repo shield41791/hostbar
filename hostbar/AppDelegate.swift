@@ -9,6 +9,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     let viewModel = HostsViewModel()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        NSApp.setActivationPolicy(.accessory)
         setupStatusItem()
         setupPopover()
         enableLaunchAtLoginIfFirstRun()
