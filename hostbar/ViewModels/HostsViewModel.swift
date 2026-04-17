@@ -39,7 +39,7 @@ final class HostsViewModel {
             try await privilegedWriter.writeHostsFile(content: content, to: hostsPath)
             hasUnsavedChanges = false
             metadataStore.save(hostsFile)
-        } catch HostBarError.userCancelled {
+        } catch HostbarError.userCancelled {
             // User cancelled auth dialog, do nothing
         } catch {
             showErrorMessage(error.localizedDescription)

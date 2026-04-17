@@ -12,7 +12,7 @@ struct GroupMetadata: Codable {
 struct GroupMetadataStore {
     private var storeURL: URL {
         let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-        let dir = appSupport.appendingPathComponent("HostBar", isDirectory: true)
+        let dir = appSupport.appendingPathComponent("Hostbar", isDirectory: true)
         return dir.appendingPathComponent("groups.json")
     }
 

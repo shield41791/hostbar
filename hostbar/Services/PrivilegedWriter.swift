@@ -1,6 +1,6 @@
 import Foundation
 
-enum HostBarError: LocalizedError {
+enum HostbarError: LocalizedError {
     case privilegeEscalationFailed
     case writeFailed(String)
     case userCancelled
@@ -49,9 +49,9 @@ struct PrivilegedWriter {
             let errorMessage = String(data: errorData, encoding: .utf8) ?? "Unknown error"
 
             if errorMessage.contains("User canceled") || errorMessage.contains("(-128)") {
-                throw HostBarError.userCancelled
+                throw HostbarError.userCancelled
             }
-            throw HostBarError.privilegeEscalationFailed
+            throw HostbarError.privilegeEscalationFailed
         }
     }
 

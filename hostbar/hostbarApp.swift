@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct HostBarApp: App {
+struct HostbarApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     var body: some Scene {

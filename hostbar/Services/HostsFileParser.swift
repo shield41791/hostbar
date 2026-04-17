@@ -17,8 +17,8 @@ struct HostsFileParser {
                 continue
             }
 
-            // HostBar group marker: # [HostBar:GroupName]
-            if let groupName = parseHostBarGroupMarker(trimmed) {
+            // Hostbar group marker: # [Hostbar:GroupName]
+            if let groupName = parseHostbarGroupMarker(trimmed) {
                 index += 1
                 let entries = collectGroupEntries(lines: lines, index: &index)
                 let group = HostGroup(name: groupName, entries: entries)
@@ -75,13 +75,13 @@ struct HostsFileParser {
 
     // MARK: - Private
 
-    /// Parses "# [HostBar:GroupName]" and returns the group name, or nil.
-    private func parseHostBarGroupMarker(_ line: String) -> String? {
+    /// Parses "# [Hostbar:GroupName]" and returns the group name, or nil.
+    private func parseHostbarGroupMarker(_ line: String) -> String? {
         let trimmed = line.trimmingCharacters(in: .whitespaces)
         guard trimmed.hasPrefix("#") else { return nil }
         let afterHash = String(trimmed.dropFirst()).trimmingCharacters(in: .whitespaces)
-        guard afterHash.hasPrefix("[HostBar:") && afterHash.hasSuffix("]") else { return nil }
-        let name = String(afterHash.dropFirst("[HostBar:".count).dropLast())
+        guard afterHash.hasPrefix("[Hostbar:") && afterHash.hasSuffix("]") else { return nil }
+        let name = String(afterHash.dropFirst("[Hostbar:".count).dropLast())
         return name.isEmpty ? nil : name
     }
 
@@ -159,7 +159,7 @@ struct HostsFileParser {
                 break
             }
 
-            if parseHostBarGroupMarker(trimmed) != nil {
+            if parseHostbarGroupMarker(trimmed) != nil {
                 break
             }
 

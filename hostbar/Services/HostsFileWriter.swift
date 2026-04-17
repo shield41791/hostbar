@@ -7,7 +7,7 @@ struct HostsFileWriter {
         for (i, section) in hostsFile.sections.enumerated() {
             switch section {
             case .group(let group):
-                lines.append("# [HostBar:\(group.name)]")
+                lines.append("# [Hostbar:\(group.name)]")
                 for entry in group.entries {
                     lines.append(formatEntry(entry))
                 }

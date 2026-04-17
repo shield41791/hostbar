@@ -27,7 +27,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func setupStatusItem() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         guard let button = statusItem.button else { return }
-        button.image = NSImage(systemSymbolName: "server.rack", accessibilityDescription: "HostBar")
+        button.image = NSImage(systemSymbolName: "server.rack", accessibilityDescription: "Hostbar")
         button.action = #selector(statusBarButtonClicked(_:))
         button.target = self
         button.sendAction(on: [.leftMouseUp, .rightMouseDown])

@@ -39,7 +39,7 @@ struct SettingsView: View {
             }
 
             VStack(alignment: .leading, spacing: 3) {
-                Text("HostBar")
+                Text("Hostbar")
                     .font(.title3)
                     .fontWeight(.semibold)
                 Text("Version \(appVersion)")

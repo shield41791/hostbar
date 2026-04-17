@@ -58,7 +58,7 @@ struct MenuBarView: View {
             // Toolbar
             VStack(spacing: 6) {
                 HStack {
-                    Text("HostBar")
+                    Text("Hostbar")
                         .font(.headline)
 
                     Spacer()
