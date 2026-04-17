@@ -118,10 +118,40 @@ struct SettingsView: View {
         updateMessage = nil
         updateFailed = false
 
-        // TODO: Integrate with Sparkle or GitHub Releases API
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-            isCheckingUpdate = false
-            updateMessage = "You're up to date."
-        }
+        let url = URL(string: "https://api.github.com/repos/shield41791/hostbar/releases/latest")!
+        var request = URLRequest(url: url)
+        request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
+
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            DispatchQueue.main.async {
+                isCheckingUpdate = false
+
+                if let error = error {
+                    updateFailed = true
+                    updateMessage = "업데이트 확인 실패: \(error.localizedDescription)"
+                    return
+                }
+
+                guard let data = data,
+                      let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                      let tagName = json["tag_name"] as? String else {
+                    updateFailed = true
+                    updateMessage = "업데이트 정보를 가져올 수 없습니다."
+                    return
+                }
+
+                let latestVersion = tagName.hasPrefix("v") ? String(tagName.dropFirst()) : tagName
+                let currentVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.0.0"
+
+                if latestVersion.compare(currentVersion, options: .numeric) == .orderedDescending {
+                    updateMessage = "새 버전 \(latestVersion) 이 있습니다."
+                    if let htmlUrl = json["html_url"] as? String, let releaseUrl = URL(string: htmlUrl) {
+                        NSWorkspace.shared.open(releaseUrl)
+                    }
+                } else {
+                    updateMessage = "최신 버전입니다."
+                }
+            }
+        }.resume()
     }
 }
