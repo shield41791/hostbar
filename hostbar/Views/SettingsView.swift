@@ -137,7 +137,7 @@ struct SettingsView: View {
 
                 if let error = error {
                     updateFailed = true
-                    updateMessage = "업데이트 확인 실패: \(error.localizedDescription)"
+                    updateMessage = "Failed to check for updates: \(error.localizedDescription)"
                     return
                 }
 
@@ -145,7 +145,7 @@ struct SettingsView: View {
                       let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                       let tagName = json["tag_name"] as? String else {
                     updateFailed = true
-                    updateMessage = "업데이트 정보를 가져올 수 없습니다."
+                    updateMessage = "Unable to retrieve update information."
                     return
                 }
 
@@ -153,12 +153,12 @@ struct SettingsView: View {
                 let currentVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.0.0"
 
                 if latestVersion.compare(currentVersion, options: .numeric) == .orderedDescending {
-                    updateMessage = "새 버전 \(latestVersion) 이 있습니다."
+                    updateMessage = "New version \(latestVersion) is available."
                     if let htmlUrl = json["html_url"] as? String, let releaseUrl = URL(string: htmlUrl) {
                         NSWorkspace.shared.open(releaseUrl)
                     }
                 } else {
-                    updateMessage = "최신 버전입니다."
+                    updateMessage = "You are on the latest version."
                 }
             }
         }.resume()
