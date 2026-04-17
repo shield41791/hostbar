@@ -4,8 +4,11 @@ import ServiceManagement
 struct SettingsView: View {
     @State private var launchAtLogin = false
     @State private var isCheckingUpdate = false
+    @State private var isUpdating = false
     @State private var updateMessage: String? = nil
     @State private var updateFailed = false
+    @State private var updateAssetURL: URL? = nil
+    @State private var updatePageURL: URL? = nil
 
     private var appVersion: String {
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—"
@@ -73,16 +76,34 @@ struct SettingsView: View {
 
             Section("Updates") {
                 HStack(spacing: 10) {
-                    Button("Check for Updates") {
-                        checkForUpdates()
+                    if updateAssetURL != nil {
+                        Button("Update") {
+                            performUpdate()
+                        }
+                        .disabled(isUpdating)
+                    } else if let pageURL = updatePageURL {
+                        Button("Update") {
+                            NSWorkspace.shared.open(pageURL)
+                        }
+                    } else {
+                        Button("Check for Updates") {
+                            checkForUpdates()
+                        }
+                        .disabled(isCheckingUpdate)
                     }
-                    .disabled(isCheckingUpdate)
 
                     if isCheckingUpdate {
                         ProgressView()
                             .scaleEffect(0.7)
                             .frame(width: 14, height: 14)
                         Text("Checking…")
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+                    } else if isUpdating {
+                        ProgressView()
+                            .scaleEffect(0.7)
+                            .frame(width: 14, height: 14)
+                        Text(updateMessage ?? "Updating…")
                             .font(.callout)
                             .foregroundStyle(.secondary)
                     } else if let message = updateMessage {
@@ -126,6 +147,8 @@ struct SettingsView: View {
         isCheckingUpdate = true
         updateMessage = nil
         updateFailed = false
+        updateAssetURL = nil
+        updatePageURL = nil
 
         let url = URL(string: "https://api.github.com/repos/shield41791/hostbar/releases/latest")!
         var request = URLRequest(url: url)
@@ -154,13 +177,100 @@ struct SettingsView: View {
 
                 if latestVersion.compare(currentVersion, options: .numeric) == .orderedDescending {
                     updateMessage = "New version \(latestVersion) is available."
-                    if let htmlUrl = json["html_url"] as? String, let releaseUrl = URL(string: htmlUrl) {
-                        NSWorkspace.shared.open(releaseUrl)
+
+                    // .zip 에셋 URL 탐색
+                    if let assets = json["assets"] as? [[String: Any]] {
+                        let zipAsset = assets.first {
+                            ($0["name"] as? String ?? "").hasSuffix(".zip")
+                        }
+                        if let downloadStr = zipAsset?["browser_download_url"] as? String {
+                            updateAssetURL = URL(string: downloadStr)
+                            return
+                        }
+                    }
+
+                    // 에셋 없으면 릴리즈 페이지 폴백
+                    if let htmlUrl = json["html_url"] as? String {
+                        updatePageURL = URL(string: htmlUrl)
                     }
                 } else {
                     updateMessage = "You are on the latest version."
                 }
             }
         }.resume()
+    }
+
+    private func performUpdate() {
+        guard let assetURL = updateAssetURL else { return }
+        isUpdating = true
+        updateMessage = "Downloading…"
+
+        URLSession.shared.downloadTask(with: assetURL) { tempURL, _, error in
+            DispatchQueue.main.async {
+                if let error = error {
+                    isUpdating = false
+                    updateFailed = true
+                    updateMessage = "Download failed: \(error.localizedDescription)"
+                    return
+                }
+                guard let tempURL = tempURL else {
+                    isUpdating = false
+                    updateFailed = true
+                    updateMessage = "Download failed."
+                    return
+                }
+                installUpdate(from: tempURL)
+            }
+        }.resume()
+    }
+
+    private func installUpdate(from zipURL: URL) {
+        updateMessage = "Installing…"
+
+        let fm = FileManager.default
+        let tempDir = fm.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+
+        do {
+            try fm.createDirectory(at: tempDir, withIntermediateDirectories: true)
+
+            let unzip = Process()
+            unzip.executableURL = URL(fileURLWithPath: "/usr/bin/unzip")
+            unzip.arguments = ["-q", zipURL.path, "-d", tempDir.path]
+            try unzip.run()
+            unzip.waitUntilExit()
+
+            let contents = try fm.contentsOfDirectory(at: tempDir, includingPropertiesForKeys: nil)
+            guard let newApp = contents.first(where: { $0.pathExtension == "app" }) else {
+                throw NSError(domain: "Update", code: 1,
+                              userInfo: [NSLocalizedDescriptionKey: "No .app found in archive."])
+            }
+
+            let currentApp = Bundle.main.bundleURL
+
+            // quarantine 속성 제거 후 앱 교체하고 재실행하는 스크립트
+            let script = """
+            #!/bin/bash
+            sleep 2
+            xattr -r -d com.apple.quarantine "\(newApp.path)" 2>/dev/null
+            rm -rf "\(currentApp.path)"
+            cp -rf "\(newApp.path)" "\(currentApp.path)"
+            open "\(currentApp.path)"
+            """
+
+            let scriptURL = tempDir.appendingPathComponent("update.sh")
+            try script.write(to: scriptURL, atomically: true, encoding: .utf8)
+            try fm.setAttributes([.posixPermissions: 0o755], ofItemAtPath: scriptURL.path)
+
+            let launcher = Process()
+            launcher.executableURL = URL(fileURLWithPath: "/bin/bash")
+            launcher.arguments = [scriptURL.path]
+            try launcher.run()
+
+            NSApplication.shared.terminate(nil)
+        } catch {
+            isUpdating = false
+            updateFailed = true
+            updateMessage = "Installation failed: \(error.localizedDescription)"
+        }
     }
 }
