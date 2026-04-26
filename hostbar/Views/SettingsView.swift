@@ -58,7 +58,7 @@ struct SettingsView: View {
     }
 
     private var copyrightFooter: some View {
-        Text("© 2026 Yohan Joo. All rights reserved.")
+        Text("© 2026 Yohan Joo. MIT License.")
             .font(.caption)
             .foregroundStyle(.tertiary)
             .padding(.bottom, 14)
