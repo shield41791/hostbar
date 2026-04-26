@@ -19,9 +19,9 @@ Hostbar is a macOS menu bar utility that allows you to manage your `/etc/hosts` 
 
 ## Screenshots
 
-| Dark Mode | Light Mode | Settings |
-| :---: | :---: | :---: |
-| ![Dark](misc/hostbar_dark.png) | ![Light](misc/hostbar_light.png) | ![Settings](misc/hosrbar_settings.png) |
+| Dark Mode | Light Mode |
+| :---: | :---: |
+| ![Dark](misc/hostbar_dark.png) | ![Light](misc/hostbar_light.png) |
 
 ## Requirements
 
