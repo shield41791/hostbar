@@ -1,6 +1,6 @@
-# HostBar 🥂
+# Hostbar 🥂
 
-HostBar is a macOS menu bar utility that allows you to manage your `/etc/hosts` file quickly and easily. It provides a sleek, native interface to control host settings without the need for terminal commands or manual text editing.
+Hostbar is a macOS menu bar utility that allows you to manage your `/etc/hosts` file quickly and easily. It provides a sleek, native interface to control host settings without the need for terminal commands or manual text editing.
 
 ## Key Features
 

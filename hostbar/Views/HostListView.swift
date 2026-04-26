@@ -173,6 +173,8 @@ private struct GroupSectionHeader: View {
     @Bindable var viewModel: HostsViewModel
     var onAddEntry: () -> Void
     @State private var isHovered = false
+    @State private var isEditing = false
+    @State private var editedName = ""
 
     var body: some View {
         HStack(spacing: 8) {
@@ -188,8 +190,34 @@ private struct GroupSectionHeader: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
-            Text(displayGroup.name)
-                .font(.system(size: 13, weight: .semibold))
+            // Group name / Inline Editor
+            if isEditing && !displayGroup.isVirtual {
+                HStack(spacing: 4) {
+                    InlineTextField(
+                        text: $editedName,
+                        placeholder: "Group name",
+                        onCommit: commitRename,
+                        onCancel: cancelRename
+                    )
+                    .frame(maxWidth: 160)
+
+                    Button(action: commitRename) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundStyle(.green)
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(editedName.trimmingCharacters(in: .whitespaces).isEmpty)
+
+                    Button(action: cancelRename) {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                }
+            } else {
+                Text(displayGroup.name)
+                    .font(.system(size: 13, weight: .semibold))
+            }
 
             Text("\(displayGroup.enabledCount)/\(displayGroup.entries.count)")
                 .font(.caption.monospacedDigit())
@@ -200,13 +228,29 @@ private struct GroupSectionHeader: View {
 
             Spacer()
 
-            Button { onAddEntry() } label: {
-                Image(systemName: "plus")
-                    .font(.caption2)
-                    .frame(width: 20, height: 20)
+            // Hover action buttons
+            HStack(spacing: 2) {
+                if !displayGroup.isVirtual {
+                    Button {
+                        editedName = displayGroup.name
+                        isEditing = true
+                    } label: {
+                        Image(systemName: "pencil")
+                            .font(.caption2)
+                            .frame(width: 20, height: 20)
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(.secondary)
+                }
+
+                Button { onAddEntry() } label: {
+                    Image(systemName: "plus")
+                        .font(.caption2)
+                        .frame(width: 20, height: 20)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.secondary)
             }
-            .buttonStyle(.plain)
-            .foregroundStyle(.secondary)
             .opacity(isHovered ? 1 : 0)
 
             if !displayGroup.isVirtual {
@@ -228,7 +272,8 @@ private struct GroupSectionHeader: View {
         .contextMenu {
             if !displayGroup.isVirtual {
                 Button("Rename...") {
-                    viewModel.editingGroup = HostGroup(id: displayGroup.id, name: displayGroup.name, entries: displayGroup.entries)
+                    editedName = displayGroup.name
+                    isEditing = true
                 }
 
                 Button("Add Entry to Group...") { onAddEntry() }
@@ -246,6 +291,18 @@ private struct GroupSectionHeader: View {
                 Button("Add Entry...") { onAddEntry() }
             }
         }
+    }
+
+    private func commitRename() {
+        let trimmed = editedName.trimmingCharacters(in: .whitespaces)
+        if !trimmed.isEmpty {
+            viewModel.renameGroup(displayGroup.id, to: trimmed)
+        }
+        isEditing = false
+    }
+
+    private func cancelRename() {
+        isEditing = false
     }
 }
 

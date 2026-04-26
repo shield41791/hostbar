@@ -6,6 +6,8 @@ struct GroupHeaderRow: View {
     @Bindable var viewModel: HostsViewModel
     var onAddEntry: () -> Void = {}
     @State private var isHovered = false
+    @State private var isEditing = false
+    @State private var editedName = ""
 
     var body: some View {
         HStack(spacing: 8) {
@@ -23,9 +25,34 @@ struct GroupHeaderRow: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
-            // Group name
-            Text(group.name)
-                .font(.system(size: 13, weight: .semibold))
+            // Group name / Inline Editor
+            if isEditing {
+                HStack(spacing: 4) {
+                    InlineTextField(
+                        text: $editedName,
+                        placeholder: "Group name",
+                        onCommit: commitRename,
+                        onCancel: cancelRename
+                    )
+                    .frame(maxWidth: 200)
+
+                    Button(action: commitRename) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundStyle(.green)
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(editedName.trimmingCharacters(in: .whitespaces).isEmpty)
+
+                    Button(action: cancelRename) {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                }
+            } else {
+                Text(group.name)
+                    .font(.system(size: 13, weight: .semibold))
+            }
 
             // Entry count badge
             Text("\(group.enabledCount)/\(group.entries.count)")
@@ -40,16 +67,29 @@ struct GroupHeaderRow: View {
 
             Spacer()
 
-            // Hover action: add entry to group (always present, visibility via opacity)
-            Button {
-                onAddEntry()
-            } label: {
-                Image(systemName: "plus")
-                    .font(.caption2)
-                    .frame(width: 20, height: 20)
+            // Hover actions: rename + add entry
+            HStack(spacing: 2) {
+                Button {
+                    editedName = group.name
+                    isEditing = true
+                } label: {
+                    Image(systemName: "pencil")
+                        .font(.caption2)
+                        .frame(width: 20, height: 20)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.secondary)
+
+                Button {
+                    onAddEntry()
+                } label: {
+                    Image(systemName: "plus")
+                        .font(.caption2)
+                        .frame(width: 20, height: 20)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.secondary)
             }
-            .buttonStyle(.plain)
-            .foregroundStyle(.secondary)
             .opacity(isHovered ? 1 : 0)
 
             // Group toggle
@@ -71,7 +111,8 @@ struct GroupHeaderRow: View {
         }
         .contextMenu {
             Button("Rename...") {
-                viewModel.editingGroup = group
+                editedName = group.name
+                isEditing = true
             }
 
             Button("Add Entry to Group...") {
@@ -92,5 +133,17 @@ struct GroupHeaderRow: View {
         .accessibilityAction(named: "Toggle All") {
             viewModel.toggleGroup(group.id)
         }
+    }
+
+    private func commitRename() {
+        let trimmed = editedName.trimmingCharacters(in: .whitespaces)
+        if !trimmed.isEmpty {
+            viewModel.renameGroup(group.id, to: trimmed)
+        }
+        isEditing = false
+    }
+
+    private func cancelRename() {
+        isEditing = false
     }
 }

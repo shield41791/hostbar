@@ -265,6 +265,8 @@ struct InlineTextField: NSViewRepresentable {
     @Binding var text: String
     var placeholder: String = ""
     var mono: Bool = false
+    var onCommit: () -> Void = {}
+    var onCancel: () -> Void = {}
 
     func makeNSView(context: Context) -> NSTextField {
         let field = NSTextField()
@@ -287,16 +289,35 @@ struct InlineTextField: NSViewRepresentable {
     }
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(text: $text)
+        Coordinator(text: $text, onCommit: onCommit, onCancel: onCancel)
     }
 
     class Coordinator: NSObject, NSTextFieldDelegate {
         var text: Binding<String>
-        init(text: Binding<String>) { self.text = text }
+        var onCommit: () -> Void
+        var onCancel: () -> Void
+
+        init(text: Binding<String>, onCommit: @escaping () -> Void, onCancel: @escaping () -> Void) {
+            self.text = text
+            self.onCommit = onCommit
+            self.onCancel = onCancel
+        }
+
         func controlTextDidChange(_ obj: Notification) {
             if let field = obj.object as? NSTextField {
                 text.wrappedValue = field.stringValue
             }
+        }
+
+        func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
+            if commandSelector == #selector(NSResponder.insertNewline(_:)) {
+                onCommit()
+                return true
+            } else if commandSelector == #selector(NSResponder.cancelOperation(_:)) {
+                onCancel()
+                return true
+            }
+            return false
         }
     }
 }

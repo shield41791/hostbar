@@ -50,7 +50,6 @@ struct MenuBarView: View {
     @State private var searchText = ""
     @State private var showSaveSuccess = false
     @State private var isAddingGroup = false
-    @State private var renamingGroup: HostGroup?
     private let maxContentHeight: CGFloat = 520
 
     var body: some View {
@@ -112,13 +111,6 @@ struct MenuBarView: View {
                 .padding(.top, 4)
             }
 
-            if let group = renamingGroup {
-                InlineRenameGroupRow(viewModel: viewModel, group: group) {
-                    renamingGroup = nil
-                }
-                .padding(.horizontal, 6)
-                .padding(.top, 4)
-            }
 
             // Content
             if viewModel.hostsFile.sections.isEmpty && !isAddingGroup {
@@ -215,12 +207,6 @@ struct MenuBarView: View {
                 viewModel.showAddGroup = false
             }
         }
-        .onChange(of: viewModel.editingGroup) { _, newValue in
-            if let group = newValue {
-                renamingGroup = group
-                viewModel.editingGroup = nil
-            }
-        }
     }
 
     private var pulseOpacity: Double {
@@ -272,50 +258,3 @@ private struct InlineAddGroupRow: View {
     }
 }
 
-// MARK: - Inline Rename Group
-
-private struct InlineRenameGroupRow: View {
-    @Bindable var viewModel: HostsViewModel
-    let group: HostGroup
-    let onDismiss: () -> Void
-
-    @State private var name = ""
-
-    private var isValid: Bool {
-        !name.trimmingCharacters(in: .whitespaces).isEmpty
-    }
-
-    var body: some View {
-        VStack(spacing: 6) {
-            HStack(spacing: 6) {
-                Image(systemName: "folder.fill")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                InlineTextField(text: $name, placeholder: "Group name")
-            }
-            HStack {
-                Spacer()
-                Button("Cancel") { onDismiss() }
-                    .buttonStyle(.plain)
-                    .foregroundStyle(.secondary)
-                    .font(.caption)
-                Button("Save") {
-                    viewModel.renameGroup(group.id, to: name.trimmingCharacters(in: .whitespaces))
-                    onDismiss()
-                }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.mini)
-                .disabled(!isValid)
-            }
-        }
-        .padding(.vertical, 6)
-        .padding(.horizontal, 8)
-        .background(
-            RoundedRectangle(cornerRadius: 4)
-                .fill(Color.accentColor.opacity(0.06))
-        )
-        .onAppear {
-            name = group.name
-        }
-    }
-}
